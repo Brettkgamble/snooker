@@ -6,7 +6,8 @@
 function setupCueBall(x, y){
     ball = Bodies.circle(x, y, 5, {
       friction: 0,
-      restitution: 0.95,
+      restitution: 0.97, // note that resititution effect is the sum of the 
+                         // other body (cushion for example) as well
     });
     Body.setMass(ball, ball.mass * 10)
     World.add(engine.world, [ball]);
@@ -30,6 +31,14 @@ function cueBallConstrained() {
   return ball.isConstrained;
 }
 
+function cueBallStopped() {
+  if (
+    Math.abs(ball.velocity.x) < 0.05 &&
+    Math.abs(ball.velocity.y) < 0.05
+  )
+  return true;
+}
+
 function setUpCueConstraint(x, y) {
     ballConstraint = Constraint.create({
       pointA: { x: x, y: y },
@@ -46,10 +55,10 @@ function setUpCueConstraint(x, y) {
   //removes the constraint when ball is released
   function removeConstraint(ballConstraint){
     setTimeout(() => {
-      // Body.setVelocity(ball, {
-        // x: limitVelocity(ball.velocity.x),
-        // y: limitVelocity(ball.velocity.y),
-      // });
+      Body.setVelocity(ball, {
+        x: limitVelocity(ball.velocity.x),
+        y: limitVelocity(ball.velocity.y),
+      });
       ballConstraint.bodyB = null;
       ballConstraint.pointA = { x: 0, y: 0 };
       ball.isConstrained = false;
@@ -82,6 +91,10 @@ function setUpCueConstraint(x, y) {
       );
     pop();
   };
+
+  function limitVelocity(velocity) {
+    return velocity > 0 ? min(velocity, 20) : max(velocity, -20);
+  }
 
   function removeCueBallFromWorld() {
     World.remove(engine.world, [ball, ballConstraint])
@@ -126,7 +139,6 @@ function mouseReleased() {
       //sp.placeButtons();
     }
   } else if (gameStart) {
-    console.log('Game Started')
     //if the game has started and the mode has been selected then remove the constraint
     removeConstraint(ballConstraint);
     //make the balls awake so they can move around

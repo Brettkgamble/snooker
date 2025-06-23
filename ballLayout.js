@@ -2,6 +2,7 @@ class BallLayout {
     constructor(tableLength, ballDiameter) {
         this.world = World;
         this.gameOption = "";
+        this.target = "Red Ball"
 
         // used for random placement of balls to ensure they are within the table limits
         this.tableXMin = 150 + 12 + table.railingWidth + table.cushionWidth;
@@ -12,6 +13,13 @@ class BallLayout {
         this.ballDiameter = ballDiameter;
         this.ballRadius = ballDiameter / 2;
         this.ballSpacing = 7;
+
+        // rule of play: red/color/red/color until no more reds
+        this.consecutiveColors = 0;
+        // track if the last ball sunk is red
+        this.redBallIn = false;
+
+        this.ballCollided;
 
         this.balls = {
             red: [],
@@ -70,9 +78,15 @@ class BallLayout {
     createBall(x, y, color, value) {
         // console.log('ball', x, y, color, value)
         let ball = new Ball(x, y, color, value);
+        
         // console.log('Ball', ball)
         this.balls[color == "red" ? "red" : "color"].push(ball);
         World.add(engine.world, [ball.object])
+    }
+
+    removeBall(array, index) {
+        World.remove(engine.world, [array[index].object]);
+        array.splice(index, 1);
     }
 
     createRedBalls() {
@@ -126,7 +140,7 @@ class BallLayout {
                 this.coloredBalls[color].value
             );
             
-        Sleeping.set(this.balls["color"][i]["object"], false);
+            Sleeping.set(this.balls["color"][i]["object"], false);
 
         }
     }   
@@ -181,13 +195,102 @@ class BallLayout {
         }
     }
 
+    ballInPocket() {
+        for (let balltype in this.balls) {
+            for (let ball of this.balls[balltype]) {
+                // test for ball in field or pocket
+                let px = ball.object.position.x;
+                let py = ball.object.position.y;
+                if (table.testBallInHole(px, py)) {
+                    if (ball.color == "red") {
+                        // track that the ball sunk was red.  Next is a color
+                        this.redBallIn = true;
+                        // Ball in pocket remove from red ball array
+                        this.removeBall(this.balls.red, this.balls.red.indexOf(ball));
+                        this.target = "Colored Ball"
+                    }
+                    else {
+                        // remove colored balls
+                        this.removeBall(this.balls.color, this.balls.color.indexOf(ball))
+                        // rule of play is that if two consecutive colors fall then a
+                        // foul has occured.  The order is red/color/red/color until
+                        // there are no more reds left
+                        this.consecutiveColors++;
+                        if (this.consecutiveColors >= 2) {
+                            this.foul = true;
+                            this.foulMessage = "Penalty:  Two consecutive colors sunk"
+                        }
+                        // If there are red balls remaining we add back the colored balls
+                        // as they are sunk
+                        if (this.balls.red.length != 0 ){
+                            this.createBall(
+                                this.coloredBalls[ball.color].x,
+                                this.coloredBalls[ball.color].y,
+                                ball.color,
+                                ball.value
+                            );
+                        } else {
+                            this.target = "Red Ball"
+                        }
+                        if (this.balls.red.length == 0 && this.balls.color.length == 0 ) {
+                            won = true;
+                        }
+                        this.redBallIn = false;
+                    }
+                    // scoreboard.addScore(this.foul ? 0 : ball.value)
+                }
+            }
+        }
+    }
+
+    redBallsCollided() {
+        if ((this.redBallIn || this.ballCollided == "color") && !this.foul ) {
+            this.foul = true;
+            this.foulMessage = "Red ball hit"
+            // scoreBoard.addScore(-4)
+        } 
+        this.redBallIn = true;
+        this.ballCollided = "red";
+    }
+
+    coloredBallsCollided() {
+        if ((!this.redBallIn || this.balls.red.length != 0) && !this.foul ) {
+            this.foul = true;
+            this.foulMessage = "Colored ball hit"
+            // scoreBoard.addScore(-4)
+        } 
+        this.redBallIn = false;
+        this.ballCollided = "color";
+    }
+
+    ballCollision(whiteBall) {
+        for (let balltype in this.balls) {
+            for (let ball of this.balls[balltype]) {
+                if (Collision.collides(whiteBall, ball.object)){
+                    if (ball.color == "red") {
+                        this.redBallsCollided();
+                    } else {
+                        this.coloredBallsCollided();
+                    }
+                }
+            }
+        }
+    }
+
+    newTurn() {
+        this.foul = false;
+        this.foulMessage = "";
+        // ballCollided = "";
+        this.consecutiveColors = 0;
+        this.setSleep(true);
+    }
+
     drawBalls() {
         
         for (let balltype in this.balls) {
             // console.log(balltype);
             for (let ball of this.balls[balltype]) {
                 // console.log(ball.object);
-                push();
                 switch (ball.color) {
                     case 'black':
                         fill(0);
@@ -214,7 +317,6 @@ class BallLayout {
                         fill(125);
                         break;
                 }
-
                 noStroke();
                 helper.drawVertices(ball.object.vertices);
             }

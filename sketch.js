@@ -89,11 +89,20 @@ function draw() {
       // constrained (in other words, not being setup to be
       // struck by the cue) then we are in play
       if (cueBallInField() && !cueBallConstrained()) {
-        fill(125)
-        ellipse(550, 260, 10, 10)
         table.cushionCollision(ball)
+        ballLayout.ballCollision(ball)
+        ballLayout.ballInPocket();
+        // check if game over
+        // ballLayout.checkWin()
+        if (cueBallStopped()) {
+          // Set up constraint on the white ball so we can shoot again
+          setUpCueConstraint(ball.position.x, ball.position.y);
+          ballLayout.newTurn();
+          //TODO
+          // sp.deactivate()
+        }
       } else if (!cueBallConstrained()) {
-        // Ball has left the field so we need to place it back
+        // Ball has left the field so we allow the player to place it back
         // behind the D line
         // scoreboard.addScore(-4)
         removeCueBallFromWorld();

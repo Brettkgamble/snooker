@@ -34,7 +34,9 @@ class Table {
     this.cushionAngle = 0.05;
     this.cushionWidth = this.tableWidth / 72 * 1.5; // 1 inch on standard table 8.3 px here
     this.smallRailWidth = 365;
-    this.dLineRadius = this.tableWidth/2; // radius of the D line arc
+    this.dLineRadius = this.tableWidth/2; // radius of the D line 
+    
+    this.cushionResitution = 0.75;
   }
 
   setupCushions = () => {
@@ -43,7 +45,7 @@ class Table {
       this.cushions.push(
         Bodies.trapezoid(358, 79, this.smallRailWidth -22.5, this.cushionWidth, -this.cushionAngle, {
         isStatic: true,
-        restitution: 1
+        restitution: this.cushionResitution
         })
       );
 
@@ -51,7 +53,7 @@ class Table {
       this.cushions.push(
         Bodies.trapezoid(742, 79, this.smallRailWidth - 22, this.cushionWidth, -this.cushionAngle, {
         isStatic: true,
-        restitution: 1
+        restitution: this.cushionResitution
         })
       );
 
@@ -59,7 +61,7 @@ class Table {
       this.cushions.push(
         Bodies.trapezoid(150 + this.railingWidth + 4, 259.5, this.smallRailWidth-22, this.cushionWidth, this.cushionAngle, {
         isStatic: true,
-        restitution: 1,
+        restitution: this.cushionResitution,
         angle: Math.PI/2,
         })
       );
@@ -68,7 +70,7 @@ class Table {
       this.cushions.push(
         Bodies.trapezoid(358, 441, this.smallRailWidth - 6, this.cushionWidth, this.cushionAngle, {
         isStatic: true,
-        restitution: 1,
+        restitution: this.cushionResitution,
         })
       );
 
@@ -76,7 +78,7 @@ class Table {
       this.cushions.push(
         Bodies.trapezoid(742, 441, this.smallRailWidth - 6 , this.cushionWidth, this.cushionAngle, {
         isStatic: true,
-        restitution: 1,
+        restitution: this.cushionResitution,
         })
       );
 
@@ -84,7 +86,7 @@ class Table {
       this.cushions.push(
         Bodies.trapezoid(931, 260, this.smallRailWidth-24, this.cushionWidth, this.cushionAngle, {
         isStatic: true,
-        restitution: 1,
+        restitution: this.cushionResitution,
         angle: -Math.PI/2,
         })
       );
@@ -167,7 +169,7 @@ class Table {
   // mid x is left gap (150) + tableLength/2 - pocketSize/2 
   drawHoles = () => {
     fill(125);
-    //top left
+    //top left (172, 82)
     ellipse(this.tableStartX + 22, this.tableStartY + 22, this.pocketSize);
     //top mid
     ellipse(this.tableMidX, this.tableStartY + 15, this.pocketSize);
@@ -179,6 +181,38 @@ class Table {
     ellipse(this.tableMidX, this.tableStartY + this.tableWidth - 15 , this.pocketSize);
     //bottom right
     ellipse(150 + this.tableLength - 22, this.tableStartY + this.tableWidth - 22, this.pocketSize);
+  }
+
+  testBallInHole = (px, py) => {
+    // TODO: probably much better if the holes were objects
+    // top left hole coords (172, 82)
+    // top mid hole coords (550, 75)
+    // top right hole coords (928, 82)
+    // bottom left hole coords (172, 438)
+    // bottom mid hole coords (550, 445)
+    // bottom right hole coords (928, 438)
+    // ellipse radius 17 (rounded up from 16.6)
+    // Store hole coordinates in two arrays
+    const holeXArray = [172, 550, 928, 172, 550, 928];
+    const holeYArray = [82, 75, 82, 438, 445, 438];
+    /* 
+      TODO: Re-factor this
+      I had problems with performing the distance equation in one step
+      as I would receive NaNs.  Breaking the distance equation down
+      mainly as a debugging process, managed to get this working.
+    */
+    for (let i = 0; i < 6; i++) {
+      // Distance approach
+      let deltaX = (px - holeXArray[i]) ** 2;
+      let deltaY = (py - holeYArray[i]) ** 2;
+      let sumDeltas = deltaX + deltaY;
+      let distance = Math.sqrt(sumDeltas)
+      // console.log('Deltas', deltaX, deltaY, sumDeltas, distance, this.pocketSize)
+      if ( distance < this.pocketSize) {
+        return true
+      }
+    }
+    return false
   }
 
   drawDLine = () => {
@@ -217,6 +251,7 @@ class Table {
         }
     }
   }
+
 
   drawTable = () => {
     this.drawSlab();
