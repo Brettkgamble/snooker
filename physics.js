@@ -13,7 +13,7 @@ function setupCueBall(x, y){
     World.add(engine.world, [ball]);
 }
 
-function cueBallInField() {
+function cueBallInPlay() {
   /* 
     This function dectects whether the white ball is within the field of play.
     This also includes the position of the cue drawback as the cue stick end 

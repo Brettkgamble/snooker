@@ -23,22 +23,16 @@ class Timer {
       //draws the timer
   drawTimer() {
     push();
-    textSize(18);
-    fill("white");
-    stroke(255);
-    //adds a "0" before the minutes and seconds if they're less than 10
-    if (this.limitMinutes + this.limitSeconds != 0) {
-      text(
-        `Time left: ${this.limitMinutes < 10 ? "0" + this.limitMinutes : this.limitMinutes}:${
-          this.limitSeconds < 10 ? "0" + this.limitSeconds : this.limitSeconds
-        }`,
-        10,
-        50
-      );
-    } else {
-      text("TIME'S UP!", 1050, 200);
-    }
-
+      let cBlue = color(0, 0, 255);
+      let cRed = color(255, 0, 0);
+      //adds a "0" before the minutes and seconds if they're less than 10
+      if (this.limitMinutes + this.limitSeconds != 0) {
+        helper.drawText(`Time left: ${this.limitMinutes < 10 ? "0" + this.limitMinutes : this.limitMinutes}:${
+            this.limitSeconds < 10 ? "0" + this.limitSeconds : this.limitSeconds
+          }`, 10, 50, 18, cBlue)
+      } else {
+        helper.drawText("TIME'S UP!", 450, 200, 32, cRed);
+      }
     pop();
   };
 

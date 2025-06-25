@@ -1,5 +1,3 @@
-// Example is based on examples from: http://brm.io/matter-js/, https://github.com/shiffman/p5-matter
-// add also Benedict Gross credit
 
 let Engine = Matter.Engine;
 const Render = Matter.Render;
@@ -19,7 +17,10 @@ var gameStart = false;
 var canvas;
 var table = new Table();
 var helper = new Helper();
+var timer;
+var scoreBoard = new ScoreBoard();
 var ballLayout = new BallLayout(800, 400 / 72);
+
 
 
 ////////////////////////////////////////////////////////////
@@ -29,12 +30,18 @@ function setup() {
   
   table.setupCushions();
   helper.setupMouseInteraction();
-  
 
+  timer = new Timer();
 }
+
+
+
 ////////////////////////////////////////////////////////////
 function draw() {
   background(125);
+  // Note sure why I cannot use these as global  or in setup
+  const cWhite = (255, 255, 255); // color variable
+  const cYellow = color(255, 255, 0);
 
   Engine.update(engine);
 
@@ -42,69 +49,55 @@ function draw() {
   table.drawTable();
 
   push();
-    textSize(22);
-    fill(255);
-    stroke(255);
-    text("CM2030 Mid Term", 450, 40);
-  pop();
+  // helper.drawText(text, xpos, ypos, textsize, fill, stroke)
+  helper.drawText("CM2030 Mid Term - Snooker", 450, 40, 22, 255, cWhite)
 
-  let timer = new Timer();
+  // Timer is a run down clock 
   timer.drawTimer();
 
   if (!ballLayout.gameOption) {
-     push();
-    textSize(12);
-    fill(255);
-    text(
-      'Select Mode with key: "o" for ordered, "u" for unordered, "p" for partially ordered',
-      350,
-      180
-    );
-    pop();
+    push()
+      helper.drawText( "To start, there are three possible play modes: ", 350, 180, 12, cWhite);
+      helper.drawText('- "1" for standard starting positions layout\n- "2" for random all\n- "3" for random reds only', 350, 210, 12, cWhite);
+    pop()
   } else {
-    textSize(14);
-    text("mode: " + ballLayout.gameOption, 25, 100);
+    push()
+      helper.drawText("mode: " + ballLayout.gameOption, 10, 100, 14, cWhite);
+    pop()
     ballLayout.drawBalls();
-    // scoreboard.drawScore();
+    push()
+      scoreBoard.drawScore();
+    pop()  
     if (!gameStart) {
-      textSize(12);
-      fill(255, 255, 0)
-      text(
-        'Click anywhere with the D arc to place the cue ball (white)',
-        350,
-        180
-      );
+      push()
+        helper.drawText('Click anywhere with the D arc to place the cue ball (white)',350, 180, 12, cYellow);
+      pop()
     } else {
       timer.startTimer();
-      push();
-      textSize(8);
-      //draw the text telling the user
-      //they can restart the game
-      fill(255);
-      text("press r to restart the game", 450, 50);
-      pop();
-      //draw the cue
+      push()
+        helper.drawText("*** n to start\na new game", 10, 120, 12, cYellow)
+      pop()
+      //draw the cue and ball
       drawCueBall();
       // If the white ball is in the field of play but not 
       // constrained (in other words, not being setup to be
       // struck by the cue) then we are in play
-      if (cueBallInField() && !cueBallConstrained()) {
+      if (cueBallInPlay() && !cueBallConstrained()) {
         table.cushionCollision(ball)
         ballLayout.ballCollision(ball)
         ballLayout.ballInPocket();
         // check if game over
-        // ballLayout.checkWin()
+        ballLayout.checkWin()
         if (cueBallStopped()) {
           // Set up constraint on the white ball so we can shoot again
           setUpCueConstraint(ball.position.x, ball.position.y);
           ballLayout.newTurn();
-          //TODO
-          // sp.deactivate()
         }
       } else if (!cueBallConstrained()) {
         // Ball has left the field so we allow the player to place it back
         // behind the D line
-        // scoreboard.addScore(-4)
+        scoreBoard.addScore(-4);
+        ballLayout.drawPenalty();
         removeCueBallFromWorld();
         // Setting gameStart to false allows the player to place the
         // whiteball and keep playing
@@ -118,19 +111,19 @@ function keyTyped(){
     //if the game hasn't started yet then the player can change the mode
   if (!gameStart && !ballLayout.gameOption) {
     //used to lowercase to allow both upper and lower case
-    if (key.toLowerCase() === "u") {
+    if (key.toLowerCase() === "1") {
+      ballLayout.setGameOption("standard");
+    }
+    if (key.toLowerCase() === "2") {
       ballLayout.setGameOption("unordered");
     }
-    if (key.toLowerCase() === "p") {
-      ballLayout.setGameOption("partial");
-    }
-    if (key.toLowerCase() === "o") {
-      ballLayout.setGameOption("ordered");
+    if (key.toLowerCase() === "3") {
+      ballLayout.setGameOption("random");
     }
   }
   //at any time the user can press r to restart the game by
   //reloading the window
-  if (key.toLowerCase() === "r") {
+  if (key.toLowerCase() === "n") {
     window.location.reload();
   }
 }

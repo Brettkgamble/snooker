@@ -28,6 +28,17 @@ class Helper {
         mouseConstraint.collisionFilter.mask = 0x0001;
         World.add(engine.world, mouseConstraint);
   };
+
+  drawText = (_text, x, y, _size=12, _fill=125, _stroke='') => {
+        textSize(_size);
+        fill(_fill);
+        if (_stroke != '')
+            stroke(_stroke);
+        else {
+            noStroke();
+        }
+        text(_text, x, y);
+  }
 }
 
 
