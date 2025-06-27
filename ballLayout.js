@@ -17,7 +17,7 @@ class BallLayout {
         this.ballSpacing = 7;
 
         // rule of play: red/color/red/color until no more reds
-        this.consecutiveColors = 3;
+        this.consecutiveColors = 0;
         // track if the last ball sunk is red
         this.redBallIn = false;
 
