@@ -302,7 +302,7 @@ class BallLayout {
         this.foul = false;
         this.foulMessage = "";
         // ballCollided = "";
-        this.consecutiveColors = 3;
+        this.consecutiveColors = 0;
         this.setSleep(true);
     }
 
